@@ -20,14 +20,16 @@ using namespace std;
 using namespace QA;
 
 // The following function is used to write each sector's data set
-void WriteSectorData( DataSet& AllBins, vector<DataSet>& SectorData, string TARGET_TYPE, int runToAnalyze ){
+void WriteSectorData( DataSet& AllBins, vector<DataSet>& SectorData, string TARGET_TYPE, int runToAnalyze, string thisDir ){
   string outname;
   cout << outname << endl;
-  outname = "/w/hallb-scshelf2102/clas12/holmberg/Dilution_Factors/Text_Files/"+TARGET_TYPE+"_"+to_string(runToAnalyze)+"_DF_Data.txt";
+  //outname = "/w/hallb-scshelf2102/clas12/holmberg/Dilution_Factors/Text_Files/"+TARGET_TYPE+"_"+to_string(runToAnalyze)+"_DF_Data.txt";
+  outname = thisDir+"/Text_Files/"+TARGET_TYPE+"_"+to_string(runToAnalyze)+"_DF_Data.txt";
   AllBins.WriteRawDFInputs(outname);
   
   for(int i=1; i<7; i++){
-    outname = "/w/hallb-scshelf2102/clas12/holmberg/Dilution_Factors/Text_Files/"+TARGET_TYPE+"_"+to_string(runToAnalyze)+"_DF_Data_S"+to_string(i)+".txt";
+    //outname = "/w/hallb-scshelf2102/clas12/holmberg/Dilution_Factors/Text_Files/"+TARGET_TYPE+"_"+to_string(runToAnalyze)+"_DF_Data_S"+to_string(i)+".txt";
+    outname = thisDir+"/Text_Files/"+TARGET_TYPE+"_"+to_string(runToAnalyze)+"_DF_Data_S"+to_string(i)+".txt";
     cout << outname << endl;
     SectorData[i-1].WriteRawDFInputs(outname);
   }
@@ -42,14 +44,19 @@ const TLorentzVector ProtonTarget = TLorentzVector(0, 0, 0, p_mass);
 // This is the main loop that goes through the data
 void Get_DF_By_Sector(){
 
-   string path_to_sidis, TARGET_TYPE;//, outfile_path;
+   string path_to_sidis, TARGET_TYPE, thisDir;
    int runToAnalyze;
-   cin >> path_to_sidis >> TARGET_TYPE >> runToAnalyze;// >> outfile_path;
+   cin >> path_to_sidis >> TARGET_TYPE >> runToAnalyze >> thisDir;
+   // The following cuts off the "/slurm" part of the string
+   cout << thisDir << endl;
+   thisDir.erase( thisDir.size() - 6, thisDir.size() );
+   cout << thisDir << endl;
    int event_counter = 0; // Counts total number of events
 
    // Read in the information for the runs
-   RunPeriod Su22; Su22.SetRunPeriod("Su22");
-   double thisTPol = Su22.getTargetPolarization( runToAnalyze );
+   //RunPeriod Su22; Su22.SetRunPeriod("Su22");
+   RunPeriod Period; Period.SetRunPeriod();
+   double thisTPol = Period.getTargetPolarization( runToAnalyze );
    // This is a correction factor for the target polarization
    double corr_factor = 1;
    if( thisTPol < 0 ) corr_factor = -1; 
@@ -64,7 +71,8 @@ void Get_DF_By_Sector(){
    double FCup_run = 0;
 
    // instantiate QADB
-   QADB * qa = new QADB(15000,18000,true);
+   //QADB * qa = new QADB(15000,18000,true);
+   QADB* qa = new QADB("latest");
 
    // custom QA cut definition
    // - decide which defects you want to check for; an event will not pass
@@ -180,7 +188,7 @@ void Get_DF_By_Sector(){
    AllData.SlotChargeIntoBin( fullFC, fullFC );
    for(size_t i=0; i<SectorData.size(); i++) SectorData[i].SlotChargeIntoBin( fullFC, fullFC );
    // Write the data
-   WriteSectorData( AllData, SectorData, TARGET_TYPE, runToAnalyze );
+   WriteSectorData( AllData, SectorData, TARGET_TYPE, runToAnalyze, thisDir );
 
 
 }

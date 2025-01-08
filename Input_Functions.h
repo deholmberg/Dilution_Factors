@@ -257,8 +257,9 @@ class RunPeriod{
 	// Constructor
 	RunPeriod() = default;
 	// Mutator
-	void SetRunPeriod(string period){
-	    if( period == "Su22" ){
+	//void SetRunPeriod(string period){
+	void SetRunPeriod(){
+	    //if( period == "Su22" ){
 		ifstream fin( "Input_Text_Files/RCDB_Run_Data.txt" );
 		if( !fin.fail() ){
 		    string line;
@@ -274,8 +275,8 @@ class RunPeriod{
 		}
 		else cout <<"Couldn't find input file; run period not set.\n";
 		fin.close();
-	    }
-	    else cout <<"Couldn't find input file; run period not set.\n";
+	    //}
+	    //else cout <<"Couldn't find input file; run period not set.\n";
 	}
 	// Accessors
 	double getTargetPolarization(int runnum) const{
