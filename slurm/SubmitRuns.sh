@@ -20,11 +20,11 @@ TARGET_TYPES=(
 # Define sidisdvcs as an array of directory paths
 sidisdvcs=(
     "/cache/clas12/rg-c/production/$PERIOD/$VERSION/10.5gev/${TARGET_TYPES[0]}/dst/train/sidisdvcs/*"
-    #"/cache/clas12/rg-c/production/$PERIOD/$VERSION/10.5gev/${TARGET_TYPES[1]}/dst/train/sidisdvcs/*"
-    #"/cache/clas12/rg-c/production/$PERIOD/$VERSION/10.5gev/${TARGET_TYPES[2]}/dst/train/sidisdvcs/*"
-    #"/cache/clas12/rg-c/production/$PERIOD/$VERSION/10.5gev/${TARGET_TYPES[3]}/dst/train/sidisdvcs/*"
-    #"/cache/clas12/rg-c/production/$PERIOD/$VERSION/10.5gev/${TARGET_TYPES[4]}/dst/train/sidisdvcs/*"
-    #"/cache/clas12/rg-c/production/$PERIOD/$VERSION/10.5gev/${TARGET_TYPES[5]}/dst/train/sidisdvcs/*"
+    "/cache/clas12/rg-c/production/$PERIOD/$VERSION/10.5gev/${TARGET_TYPES[1]}/dst/train/sidisdvcs/*"
+    "/cache/clas12/rg-c/production/$PERIOD/$VERSION/10.5gev/${TARGET_TYPES[2]}/dst/train/sidisdvcs/*"
+    "/cache/clas12/rg-c/production/$PERIOD/$VERSION/10.5gev/${TARGET_TYPES[3]}/dst/train/sidisdvcs/*"
+    "/cache/clas12/rg-c/production/$PERIOD/$VERSION/10.5gev/${TARGET_TYPES[4]}/dst/train/sidisdvcs/*"
+    "/cache/clas12/rg-c/production/$PERIOD/$VERSION/10.5gev/${TARGET_TYPES[5]}/dst/train/sidisdvcs/*"
 )
 
 # Directorty for the output files
@@ -34,7 +34,7 @@ destination=/w/hallb-scshelf2102/clas12/holmberg/DF_Calculation/data_out
 
 # Iterate over each directory path in the array
 #for dirpath in "${sidisdvcs[@]}"
-for i in {0..0}
+for i in {0..5}
 do
     dirpath=${sidisdvcs[${i}]}
     for hipo in $dirpath

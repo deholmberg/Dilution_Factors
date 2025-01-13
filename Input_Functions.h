@@ -161,8 +161,6 @@ double ND3DFError(double nA, double nCD, double nC, double nET, double nF, doubl
   
 }
 
-
-
 // These constants are used to make the calulation of the DF_NH3 using the PF a little easier
 const double q = 3*pA / (2*pC*pCH); const double r = pC - pCH + LHe*(pCH/lC - pC/lCH);
 const double s = -LHe*pCH/lC; const double t = LHe*pC/lCH; const double u = pCH - pC;
@@ -213,42 +211,43 @@ double ND3DF_Thru_PF_Error(double pf, double nA, double nCD, double nC, double n
 
 }
 
-
 //Run_Number  Target  Beam_Cur_Req  Beam_Energy  Num_Events  HWP_Status  Target_Pol  Solenoid_Scale  Torus_Scale
 // This class holds information about each of the runs from RCDB
 class Run{
     private:
 	int RunNumber = 0; 
 	string TargetType;
-	double BeamCurrent = 0; // in nC
-	double BeamEnergy = beam_energy; // in GeV
+	string BeamCurrent = "N/A"; // in nC
+	double BeamEnergy = 0; // in GeV
         int NumberEvents = 0;
 	int HWPStatus = -1; // 1=in, 0=out, -1=uninitialized
 	double TargetPolarization = 0; // NMR Tpol for NH3 and ND3; zero for other targets
 	double SolenoidScale = 0; // Current direction in solenoid
 	double TorusScale = 0; // Current direction in torus
+	string Epoch; // Run range 'epoch' that this run is a part of; used for DF/PF calculation
     public:
 	// Constructor
 	Run() = default;
 	// Mutators
-	void SetRunInfo(int rn, string tt, double bc, int ne, int hwp, double tp, double ss, double ts){
-	    RunNumber = rn; TargetType = tt; BeamCurrent = bc; NumberEvents = ne;
-	    HWPStatus = hwp; TargetPolarization = tp; SolenoidScale = ss; TorusScale = ts;
+	void SetRunInfo(int rn, string tt, string bc, double be, int ne, int hwp, double tp, double ss, double ts, string epoch){
+	    RunNumber = rn; TargetType = tt; BeamCurrent = bc; BeamEnergy = be; NumberEvents = ne;
+	    HWPStatus = hwp; TargetPolarization = tp; SolenoidScale = ss; TorusScale = ts; Epoch = epoch;
 	}
 	// Accessors
 	int getRunNumber() const{ return RunNumber;}
 	string getTargetType() const{ return TargetType;}
-	double getBeamCurrent() const{ return BeamCurrent;}
+	string getBeamCurrent() const{ return BeamCurrent;}
 	double getBeamEnergy() const{ return BeamEnergy;}
 	int getNumberEvents() const{ return NumberEvents;}
 	int getHWPStatus() const{ return HWPStatus;}
 	double getTargetPolarization() const{ return TargetPolarization;}
 	double getSolenoidScale() const{ return SolenoidScale;}
 	double getTorusScale() const{ return TorusScale;}
+	string getEpoch() const{ return Epoch;}
 	// Destructor
 	~Run() =  default;
-
 };
+
 // This class holds the run for a given run period
 class RunPeriod{
     private:
@@ -257,26 +256,22 @@ class RunPeriod{
 	// Constructor
 	RunPeriod() = default;
 	// Mutator
-	//void SetRunPeriod(string period){
 	void SetRunPeriod(){
-	    //if( period == "Su22" ){
-		ifstream fin( "Input_Text_Files/RCDB_Run_Data.txt" );
-		if( !fin.fail() ){
-		    string line;
-		    getline(fin,line); // throw away header row
-		    while(getline(fin,line)){
-			stringstream sin(line);
-			int rn; string tt; double bc, be; int ne; int hwp; double tp; double ss; double ts;
-			sin >> rn >> tt >> bc >> be >> ne >> hwp >> tp >> ss >> ts;
-			Run thisRun;
-			thisRun.SetRunInfo(rn, tt, bc, ne, hwp, tp, ss, ts);
-			Runs.push_back(thisRun);
-		    }
+	    ifstream fin( "Input_Text_Files/RGC_Run_Info.txt" );
+	    if( !fin.fail() ){
+	        string line;
+	        getline(fin,line); // throw away header row
+	        while(getline(fin,line)){
+	            stringstream sin(line);
+		    int rn; string tt; string bc; double be; int ne; int hwp; double tp; double ss; double ts; string epoch;
+		    sin >> rn >> tt >> bc >> be >> ne >> hwp >> tp >> ss >> ts >> epoch;
+		    Run thisRun;
+		    thisRun.SetRunInfo(rn, tt, bc, be, ne, hwp, tp, ss, ts, epoch);
+		    Runs.push_back(thisRun);
 		}
-		else cout <<"Couldn't find input file; run period not set.\n";
-		fin.close();
-	    //}
-	    //else cout <<"Couldn't find input file; run period not set.\n";
+	    }
+	    else cout <<"Couldn't find input file; run period not set.\n";
+	    fin.close();
 	}
 	// Accessors
 	double getTargetPolarization(int runnum) const{
@@ -289,6 +284,14 @@ class RunPeriod{
 	    }
 	    cout <<"Couldn't find run "<< runnum <<". Check inputs.\n";
 	    return 0;
+	}
+	vector<int> getRunEpoch(string epoch) const{
+	    vector<int> RunsInEpoch;
+	    for(size_t i=0; i<Runs.size(); i++){
+		if( Runs[i].getEpoch() == epoch ) RunsInEpoch.push_back( Runs[i].getRunNumber() );
+	    }
+	    if( RunsInEpoch.size() == 0 ) cout << "Couldn't find runs for epoch "<<epoch<<endl;
+	    return RunsInEpoch;
 	}
 	// Destructor
 	~RunPeriod() = default;
