@@ -15,3 +15,6 @@ Log on to the farm and clone this repository to wherever you like. From there, g
 
 I know this code kinda sucks, but it's still a work in progress. I hope this repository will be helpful for anyone trying to figure out how I did things!
 
+## Acknowledgements
+I want to thank Sebastian Khun and Darren Upton for their help and feedback in putting this code together. I also want to thank Gregory Matousek, since I used an edited verison of his code in the scripts "SubmitRuns.sh" and "DilutionData.slurm". Without his code as a template, I wouldn't have been able to figure out how to use slurm to send jobs to the farm.
+
