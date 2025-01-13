@@ -1,10 +1,8 @@
 //***********************************************************************
-//***********************************************************************
-//  HIPO 4.0
-//=======================================================================
+//
 // Date Created: 8/30/2024
-// // Author: Derek Holmberg 
-// Last Modified: 11/23/2024
+// Author: Derek Holmberg 
+// Last Modified: 1/10/2025
 //
 // The purpose of this program is to do my own analysis of the dilution
 // factors (DF) following the procedure outlined in Sebastian's paper.
