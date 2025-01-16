@@ -1,15 +1,14 @@
 //***********************************************************************
 //
-// Date Created: 1/10/2024
+// Date Created: 1/16/2024
 // Author: Derek Holmberg 
-// Last Modified: 1/10/2025
+// Last Modified: 1/16/2025
 //
-// This program calculates the dilution factors and packing fractions
-// for various "epochs" (ranges of runs) in the RG-C dataset. Currently,
-// my program has information for only the data taken in the summer 2022
-// dataset (runs 16042-16772), so keep that in mind.
-// Also, the code for the ND3 dilution factors and packing fractions
-// doesn't work, so don't trust it lol.
+// This program calculates the beam-target polarization (PbPt) on
+// a run-by-run basis or over a given run epoch in the RG-C dataset. 
+// Currently, my program has information for only the data taken in 
+// the summer 2022 dataset (runs 16042-16772), so keep that in mind.
+// Also, the code for the ND3 PbPt extraction hasn't been implemented.
 //
 //***********************************************************************
 

@@ -301,17 +301,17 @@ class RunPeriod{
 const vector<double> Q2_Bin_Bounds = { /*0.9188, 1.0969,*/ 1.3094, 1.5632, 1.8661, 2.2277,
 	2.6594, 3.1747, 3.7899, 4.5243, 5.4009, 6.4475, 7.6969, 9.1884, 10.9689};
 // This vector contains the bin boundaries for the x bins
-const vector<double> X_Bin_Bounds = {0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45,
-	0.5, 0.55, 0.6, 0.65, 0.7, 0.75};
+//const vector<double> X_Bin_Bounds = {0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45,
+//	0.5, 0.55, 0.6, 0.65, 0.7, 0.75};
 //const vector<double> X_Bin_Bounds = {   0.0875, 0.1125, 0.1375, 0.1625, 0.1875, 0.2125, 0.2375, 0.2625,
 //	0.2875, 0.3125, 0.3375, 0.3625, 0.3875, 0.4125, 0.4375, 0.4625, 0.4875, 0.5125, 0.5375, 0.5625, 0.5875, 
 //	0.6125, 0.6375, 0.6625, 0.6875, 0.7125, 0.7375, 0.7625, 0.7875 };
-/*
+
 const vector<double> X_Bin_Bounds = {0.075, 0.1, 0.125, 0.15, 0.175, 0.2, 0.225, 0.25, 0.275,
 	0.3, 0.325, 0.35, 0.375, 0.4, 0.425, 0.45, 0.475,
 	0.5, 0.525, 0.55, 0.575, 0.6, 0.625, 0.65, 0.675,
 	0.7, 0.725, 0.75, 0.775, 0.8, 0.825, 0.85, 0.875 };
-*/
+
 // This struct holds information about the counts of different target types
 class Count{
 
@@ -351,8 +351,14 @@ class Count{
 	double getFCm() const{return FCm;}
 	double getFCp() const{return FCp;}
 	double getFCt() const{return FCm+FCp;}
-	double getNormNm() const{return NormNm;}
-	double getNormNp() const{return NormNp;}
+	double getNormNm() const{
+	    if( FCm > 0.0 ) return Nm / FCm;
+	    else return 0.0;
+	}
+	double getNormNp() const{
+	    if( FCp > 0.0 ) return Np / FCp;
+	    else return 0.0;
+	}
 	//double getNormNt() const{return NormNm+NormNp;}
 	double getNormNt() const{
 	    if( FCm > 0.0 && FCp > 0.0 )
@@ -390,6 +396,10 @@ class Bin{
 	double PF_cell_NH3 = 0.0; double ErrPF_cell_NH3 = 0.0;
 	double PF_bath_ND3 = 0.0; double ErrPF_bath_ND3 = 0.0;
 	double PF_cell_ND3 = 0.0; double ErrPF_cell_ND3 = 0.0;
+	// Holds the raw double-spin asymmetry for NH3
+	double AllRawNH3 = 0.0;
+	// Holds the theoretical value of the double-spin asymmetry for NH3 in this bin
+	double AllTheoryNH3 = 0.0;
 
 	// Hold the count types for every kind of target
 	Count NH3_Counts = Count("NH3"); // Ammonia
@@ -417,6 +427,12 @@ class Bin{
 	void SetDF_ND3(double df, double dferr){
 		DF_ND3 = df; ErrDF_ND3 = dferr;
 	}
+	void SetAllRawNH3(double allraw){
+		AllRawNH3 = allraw;
+	}
+	void SetAllTheoryNH3(double allth){
+		AllTheoryNH3 = allth;
+	}
 	void CalculateDF(){
 		NH3_Counts.SetNormCounts(); double nA = NH3_Counts.getNt(); double fA = NH3_Counts.getFCt();
 		ND3_Counts.SetNormCounts(); double nD = ND3_Counts.getNt(); double fD = ND3_Counts.getFCt();
@@ -431,7 +447,7 @@ class Bin{
 			double errdfnh3 = NH3DFError( nA/fA, nCH/fCH, nC/fC, nET/fET, nF/fF, sqrt(nA)/fA, sqrt(nCH)/fCH, sqrt(nC)/fC, sqrt(nET)/fET, sqrt(nF)/fF );
 			DF_NH3 = dfnh3; ErrDF_NH3 = errdfnh3;
 		}
-		else{
+		else if(nA > 0.0){
 			cout <<"ERROR: Some FC charges are zero for NH3 calculation; check inputs.\n";
 		}
 		// Calculate ND3 dilution factor for this bin
@@ -441,7 +457,7 @@ class Bin{
 			double errdfnd3 = ND3DFError( nD/fD, nCD/fCD, nC/fC, nET/fET, nF/fF, sqrt(nD)/fD, sqrt(nCD)/fCD, sqrt(nC)/fC, sqrt(nET)/fET, sqrt(nF)/fF );
 			DF_ND3 = dfnd3; ErrDF_ND3 = errdfnd3;
 		}
-		else{
+		else if(nD > 0.0){
 			cout <<"ERROR: Some FC charges are zero for ND3 calculation; check inputs.\n";
 		}
 		
@@ -461,7 +477,7 @@ class Bin{
 			PF_bath_NH3 = pfnh3; ErrPF_bath_NH3 = errpfnh3;
 			PF_cell_NH3 = (LHe / 5.0)*pfnh3; ErrPF_cell_NH3 = (LHe / 5.0)*errpfnh3;
 		}
-		else{
+		else if(nA > 0.0){
 			cout <<"ERROR: Some FC charges are zero for NH3 calculation; check inputs.\n";
 		}
 		// Calculate ND3 packing fraction for this bin
@@ -471,7 +487,7 @@ class Bin{
 			PF_bath_ND3 = pfnd3; ErrPF_bath_ND3 = errpfnd3;
 			PF_cell_ND3 = (LHe / 5.0)*pfnd3; ErrPF_cell_ND3 = (LHe / 5.0)*errpfnd3;
 		}
-		else{
+		else if(nD > 0.0){
 			cout <<"ERROR: Some FC charges are zero for ND3 calculation; check inputs.\n";
 		}
 	}
@@ -509,6 +525,15 @@ class Bin{
 		    }
 		}
 		else cout <<"ERROR: Invalid target type. Can only calculate DF(PF) for NH3 and ND3 targets.\n";
+	}
+	// Calculates the raw double-spin asymmetry for this bin
+	void CalculateAllRawNH3(){
+	    double normNm = NH3_Counts.getNormNm(); double normNp = NH3_Counts.getNormNp();
+	    if( normNm > 0.0 && normNp > 0.0 ) AllRawNH3 = (normNm - normNp) / (normNm + normNp);
+	    else{
+		//cout << "ERROR: FC-normalized counts might be zero; check inputs. Set AllRawNH3 = 0\n";
+		AllRawNH3 = 0.0;
+	    }
 	}
 
 	void AddCounts(double nm, double np, string targtype){
@@ -562,6 +587,8 @@ class Bin{
 	double getErrPF_bath_ND3() const{ return ErrPF_bath_ND3; }
 	double getPF_cell_ND3() const{ return PF_cell_ND3; }
 	double getErrPF_cell_ND3() const{ return ErrPF_cell_ND3; }
+	double getAllTheoryNH3() const{ return AllTheoryNH3; }
+	double getAllRawNH3() const{ return AllRawNH3; }
 
 	bool IsInBin(double qmid, double xmid) const{
 	    if( qmid < Q2_Max && qmid > Q2_Min && xmid < X_Max && xmid > X_Min ) return true;
@@ -723,8 +750,36 @@ vector<vector<Bin>> SetBinWidths(){
 		}
 		AllBins.push_back(theseQ2Bins);
 	}
+	// Now initialize the theoretical values for the double-spin asymmetry
+	ifstream allin("Input_Text_Files/Asymmetry_Parameterizations.txt");
+	if( !allin.fail() ){
+	    string line;
+	    getline(allin,line); // Throw away header row
+	    while( getline(allin, line) ){
+	        stringstream sin(line);
+		double xbin, Q2bin, W2, Q2, xmid, Q2min, Q2max, Df_NH3, Err_Df_NH3, Q2_avg, W, nu, y, Eprime, theta, eps, D, eta, F1, F2, R, A1, A2, g1, g2;
+		sin >> xbin>>Q2bin>>W2>>Q2>>xmid>>Q2min>>Q2max>>Df_NH3>>Err_Df_NH3>>Q2_avg>>W>>nu>>y>>Eprime>>theta>>eps>>D>>eta>>F1>>F2>>R>>A1>>A2>>g1>>g2;
+		double qmid = (Q2min+Q2max) / 2.0;
+		double ALL_Theory = D*(A1+eta*A2); // Theoretical value of double spin asymmetry for this bin
+		//cout << qmid <<" "<< xmid <<" "<< ALL_Theory << endl;
+		for(size_t i=0; i<AllBins.size(); i++){ // Q2 bin loop
+		    for(size_t j=0; j<AllBins[i].size(); j++){
+		        if( AllBins[i][j].IsInBin( qmid, xmid )  ){
+		            AllBins[i][j].SetAllTheoryNH3( ALL_Theory );
+		        }
+		    }
+		}
+
+	    }
+	}
+	else{
+	    cout << "Failed to read in A_ll theory values. Check path to 'Asymmetry_Parameterizations.txt' and try again.\n";
+	}
+	allin.close();
+
 	return AllBins;
 }
+
 
 class DataSet{
 
@@ -853,6 +908,14 @@ class DataSet{
 	    }
 	    else{
 		cout <<"ERROR: Zero passed into weighted avg. PF calculation; new PF values are not set.\n";
+	    }
+	}
+	// Set the raw double-spin asymmetry for NH3
+	void CalculateAllRawNH3(){
+	    for(size_t i=0; i<AllBins.size(); i++){
+		for(size_t j=0; j<AllBins[i].size(); j++){
+		    AllBins[i][j].CalculateAllRawNH3();
+		}
 	    }
 	}
 	// Accessors
@@ -1062,6 +1125,28 @@ class DataSet{
 	    cout <<"ERROR: Couldn't find bin in range specified: Q2 = "<<qmid<<", X = "<<xmid<<endl;
 	    return 0.0;
 	}
+	double getAllTheoryNH3(double qmid, double xmid) const{
+	    for(size_t i=0; i<AllBins.size(); i++){
+	 	for(size_t j=0; j<AllBins[i].size(); j++){
+		    if( AllBins[i][j].IsInBin( qmid, xmid ) ){ 
+			return AllBins[i][j].getAllTheoryNH3();
+		    }
+		}
+	    }
+	    cout <<"ERROR: Couldn't find bin in range specified: Q2 = "<<qmid<<", X = "<<xmid<<endl;
+	    return 0.0;
+	}
+	double getAllRawNH3(double qmid, double xmid) const{
+	    for(size_t i=0; i<AllBins.size(); i++){
+	 	for(size_t j=0; j<AllBins[i].size(); j++){
+		    if( AllBins[i][j].IsInBin( qmid, xmid ) ){ 
+			return AllBins[i][j].getAllRawNH3();
+		    }
+		}
+	    }
+	    cout <<"ERROR: Couldn't find bin in range specified: Q2 = "<<qmid<<", X = "<<xmid<<endl;
+	    return 0.0;
+	}
         // Getting the average PF for the NH3 targets
 	double getAveragePF_bath_NH3() const{
 	    double avgPF = 0.0; double counts = 0.0;
@@ -1224,6 +1309,89 @@ class DataSet{
 	}
 	// Destructor
 	~DataSet() = default;	
+};
+
+// This class is used for calculating the beam-target polarization on a run-by-run basis
+class PbPt{
+
+    private:
+	vector<vector<Bin>> AllBins;
+	int RunNumber = 0;
+    public:
+	// Constructors
+	PbPt() : AllBins( SetBinWidths() ){}
+
+	// Mutators
+	// This function reads in from a particular run so PbPt can be calculated for it
+	void ReadInThisNH3Run(int thisRun){
+	    RunNumber = thisRun;
+	    string infile = "Text_Files/NH3_"+to_string(thisRun)+"_DF_Data.txt";
+	    ifstream fin(infile.c_str());
+	    if( !fin.fail() ){
+		string line; getline(fin, line); // Throw away header row
+		while( getline(fin, line) ){
+		    stringstream sin(line);
+		    double qmin, qmax, xmin, xmax, Nm, Np, FCm, FCp;
+		    sin >> qmin >> qmax >> xmin >> xmax >> Nm >> Np >> FCm >> FCp;
+		    double qmid = (qmin + qmax) / 2.0;
+		    double xmid = (xmin + xmax) / 2.0;
+		    for(size_t i=0; i<AllBins.size(); i++){
+			for(size_t j=0; j<AllBins[i].size(); j++){
+			    if( AllBins[i][j].IsInBin( qmid, xmid ) ){
+				AllBins[i][j].AddCounts( Nm, Np, "NH3" );
+				AllBins[i][j].AddFCCharge( FCm, FCp, "NH3");
+			    }
+			}
+		    }
+		}
+	    }
+	    else{
+		cout << "ERROR: Couldn't open file '"<<infile<<"'. Check path and try again.\n";
+	    }
+	    fin.close();
+	}
+	// Calculates the raw double-spin asymmetry for this bin
+	void CalculateAllRawNH3(){
+	    for(size_t i=0; i<AllBins.size(); i++){
+		for(size_t j=0; j<AllBins[i].size(); j++){
+	    	    double normNm = AllBins[i][j].getNormNm("NH3"); double normNp = AllBins[i][j].getNormNp("NH3");
+	    	    if( normNm > 0.0 && normNp > 0.0 ) AllBins[i][j].SetAllRawNH3 = (normNm - normNp) / (normNm + normNp);
+	    	    else{
+			//cout << "ERROR: FC-normalized counts might be zero; check inputs. Set AllRawNH3 = 0\n";
+	    	    }
+		}
+	    }
+	}
+	// This copies a set of dilution factors from a given epoch
+	void SetDFs( DataSet& Epoch ){
+	    for(size_t i=0; i<AllBins.size(); i++){
+		for(size_t j=0; j<AllBins[i].size(); j++){
+		    double qmid = AllBins[i][j].getBinQ2(); double xmid = AllBins[i][j].getBinX();
+		    AllBins[i][j].SetDF_NH3( Epoch.getDF_NH3(qmid,xmid), Epoch.getErrDF_NH3(qmid,xmid) ); 
+		}
+	    }
+	}	
+	// Accessors
+	double getAllRawNH3(double qmid, double xmid) const{
+	    for(size_t i=0; i<AllBins.size(); i++){
+	 	for(size_t j=0; j<AllBins[i].size(); j++){
+		    if( AllBins[i][j].IsInBin( qmid, xmid ) ){ 
+			return AllBins[i][j].getAllRawNH3();
+		    }
+		}
+	    }
+	    cout <<"ERROR: Couldn't find bin in range specified: Q2 = "<<qmid<<", X = "<<xmid<<endl;
+	    return 0.0;
+	}
+	void Print() const{
+	    for(size_t i=0; i<AllBins.size(); i++){
+		for(size_t j=0; j<AllBins[i].size(); j++){
+		    AllBins[i][j].Print();
+		}
+	    }
+	}
+	// Destructors
+
 };
 
 // This function takes in a DataSet object and makes plots for Q2 bins
@@ -1501,6 +1669,59 @@ TCanvas* PF_Legend_Plot( DataSet& AllData, string sector, string targetType ){
     return PF_Plot;
 }
 
+// Plots the raw double-spin asymmetries for NH3 targets
+TCanvas* AllRawNH3_Legend_Plot( PbPt& AllData, string sector ){
+
+    vector<int> palette = { 1, 632, 800, 400, 416, 600, 840, 880, 900, 616, 820, 432, 920, 860 };
+    int pint = 0;
+
+    TMultiGraph* mgAllRaw = new TMultiGraph();
+    TLegend* mgLeg = new TLegend(0.1,0.7,0.4,0.9);
+    mgLeg->SetNColumns(3);
+    mgLeg->SetHeader("Q^{2} Bins (GeV^{2})","C");
+
+    AllData.CalculateAllRawNH3(); // Calculate the raw double-spin asymmetries for NH3
+
+    for(size_t i=0; i<Q2_Bin_Bounds.size()-1; i++){
+	double qmid = (Q2_Bin_Bounds[i]+Q2_Bin_Bounds[i+1])/2.0;
+	vector<double> xbins, arawvals, zeros, arawerrs;
+	for(size_t j=0; j<X_Bin_Bounds.size()-1; j++){
+	    double xmid = (X_Bin_Bounds[j]+X_Bin_Bounds[j+1])/2.0;
+	    double thisAllRaw = AllData.getAllRawNH3(qmid, xmid); 
+	    double thisErrAllRaw = 0.05*thisAllRaw; // Set this to 5% error as a placeholder
+            if( thisAllRaw != 0.0 ){
+		    xbins.push_back(xmid); zeros.push_back(0.0);
+		    arawvals.push_back( thisAllRaw );
+		    arawerrs.push_back( thisErrAllRaw );
+	    }
+	}
+	if( xbins.size() > 0 ){
+	    TGraphErrors* gr = new TGraphErrors(xbins.size(), xbins.data(), arawvals.data(), zeros.data(), arawerrs.data() );
+	    gr->SetMarkerColor( palette[pint] );
+	    if(pint < 4 ){ gr->SetMarkerStyle(kFullCircle); }
+	    else if(pint >= 4 && pint < 8){ gr->SetMarkerStyle(kFullTriangleUp); }
+	    else if(pint >= 8){ gr->SetMarkerStyle(kFullSquare); }
+	    mgAllRaw->Add( gr, "p" );
+	    stringstream legTitle; legTitle << "Q^{2}=" << fixed << setprecision(3) << qmid;
+	    mgLeg->AddEntry( gr, legTitle.str().c_str(), "p");
+	    pint++;
+	}
+    }
+
+    string title = "NH3 A_{||,raw} for "+sector+"; X; A_{||}";
+    mgAllRaw->SetTitle(title.c_str());
+    mgAllRaw->GetXaxis()->SetLimits(0,0.8); mgAllRaw->GetYaxis()->SetRangeUser(-0.02,0.05);
+    
+    string pltTitle = "AllRawNH3 Plots "+sector;
+    TCanvas* AllRawNH3_Plot = new TCanvas(pltTitle.c_str(),pltTitle.c_str(),800,600);
+    AllRawNH3_Plot->cd();
+    mgAllRaw->Draw("AP");
+    mgLeg->Draw("same");
+
+    return AllRawNH3_Plot;
+}
+
+
 // Makes a plot of the PF for the target cell only, excluding the LHe bath
 TCanvas* PFcell_Legend_Plot( DataSet& AllData, string sector ){
  
@@ -1563,80 +1784,4 @@ TCanvas* PFcell_Legend_Plot( DataSet& AllData, string sector ){
     return PF_Plot;
 }
 
-TGraphErrors* Make_NH3_Sector_Plots( DataSet& AllData, string sector ){
- 
-    vector<int> palette = { 1, 632, 800, 400, 416, 600};//, 840, 880, 900, 616, 820, 432, 920, 860 };
-    //vector<TGraphErrors*> All_NH3_Plots;
 
-    TMultiGraph* mgNH3 = new TMultiGraph();
-    int s = stoi(sector);
-    vector<double> xbins, dfnh3vals, zeros, dfnh3errs;
-    for(size_t i=0; i<Q2_Bin_Bounds.size()-1; i++){
-	double qmid = (Q2_Bin_Bounds[i]+Q2_Bin_Bounds[i+1])/2.0;
-	for(size_t j=0; j<X_Bin_Bounds.size()-1; j++){
-	    double xmid = (X_Bin_Bounds[j]+X_Bin_Bounds[j+1])/2.0;
-	    double thisDFNH3 = AllData.getDF_NH3(qmid, xmid);
-	    double thisErrDFNH3 = AllData.getErrDF_NH3(qmid, xmid);
-	    if( thisDFNH3 != 0.0 ){
-		xbins.push_back(xmid); zeros.push_back(0.0);
-		dfnh3vals.push_back( thisDFNH3 );
-		dfnh3errs.push_back( thisErrDFNH3 );
-	    }
-	}
-    }
-    TGraphErrors* gr = new TGraphErrors(xbins.size(), xbins.data(), dfnh3vals.data(), zeros.data(), dfnh3errs.data() );
-    gr->SetMarkerStyle(kFullCircle); gr->SetMarkerColor( palette[s-1] );
-    //All_NH3_Plots.push_back( gr );
-
-    string title = "DF_{NH3} for "+sector+"; X; DF_{NH3}";
-    gr->SetTitle(title.c_str());
-    gr->GetXaxis()->SetRangeUser(0,0.8); mgNH3->GetYaxis()->SetRangeUser(-0.25,0.8);
-
-    //TCanvas* Plot = new TCanvas("Plot","Plot",800,600);
-    //Plot->cd();
-    //mgNH3->Draw("AP");
-    return gr;
-}
-
-TMultiGraph* Make_ND3_Bin_Plots( DataSet& AllData, string sector ){
- 
-    vector<int> palette = { 1, 632, 800, 400, 416, 600, 840, 880, 900, 616, 820, 432, 920, 860 };
-    //vector<TGraphErrors*> All_ND3_Plots;
-
-    TMultiGraph* mgND3 = new TMultiGraph();
-
-    for(size_t i=0; i<Q2_Bin_Bounds.size()-1; i++){
-	double qmid = (Q2_Bin_Bounds[i]+Q2_Bin_Bounds[i+1])/2.0;
-	//string title = "Q2_Bin = "+to_string(qmid)+" "+sector;
-	vector<double> xbins, dfnh3vals, zeros, dfnh3errs;
-	for(size_t j=0; j<X_Bin_Bounds.size()-1; j++){
-	    double xmid = (X_Bin_Bounds[j]+X_Bin_Bounds[j+1])/2.0;
-	    //Bin* thisBin = AllData.getThisBin( qmid, xmid );
-	    //double thisDFND3 = thisBin->getDF_ND3();
-	    //double thisErrDFND3 = thisBin->getErrDF_ND3();
-	    double thisDFND3 = AllData.getDF_ND3(qmid, xmid);
-	    double thisErrDFND3 = AllData.getErrDF_ND3(qmid, xmid);
-	    if( thisDFND3 != 0.0 ){
-		xbins.push_back(xmid); zeros.push_back(0.0);
-		dfnh3vals.push_back( thisDFND3 );
-		dfnh3errs.push_back( thisErrDFND3 );
-	    }
-	}
-	if( xbins.size() > 0 ){
-	    TGraphErrors* gr = new TGraphErrors(xbins.size(), xbins.data(), dfnh3vals.data(), zeros.data(), dfnh3errs.data() );
-	    gr->SetMarkerStyle(kFullCircle); gr->SetMarkerColor( palette[i] );
-	    //All_ND3_Plots.push_back( gr );
-	    mgND3->Add( gr, "p" );
-	}
-    }
-
-    string title = "DF_{ND3} for "+sector+"; X; DF_{ND3}";
-    mgND3->SetTitle(title.c_str());
-    mgND3->GetXaxis()->SetRangeUser(0,0.8); mgND3->GetYaxis()->SetRangeUser(-0.25,0.8);
-
-    //TCanvas* Plot = new TCanvas("Plot","Plot",800,600);
-    //Plot->cd();
-    //mgND3->Draw("AP");
-    return mgND3;
-
-}

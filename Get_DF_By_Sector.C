@@ -51,6 +51,25 @@ void Get_DF_By_Sector(){
    cout << thisDir << endl;
    int event_counter = 0; // Counts total number of events
 
+   // These diagnostic plots are used to keep track of the electron vertex positions,
+   // energy distributions, and raster positions
+   // Vertex Plots:
+   string VXname = TARGET_TYPE +"_"+to_string(runToAnalyze)+"_VX"; string VXtitle = "Plot of e^{-} V_{X}; V_{X} (cm);;";
+   string VYname = TARGET_TYPE +"_"+to_string(runToAnalyze)+"_VY"; string VYtitle = "Plot of e^{-} V_{Y}; V_{Y} (cm);;";
+   string VZname = TARGET_TYPE +"_"+to_string(runToAnalyze)+"_VZ"; string VZtitle = "Plot of e^{-} V_{Z}; V_{Z} (cm);;";
+   string Wname = TARGET_TYPE +"_"+to_string(runToAnalyze)+"_W"; string Wtitle = "Plot of e^{-} Missing Mass; W (GeV);;";
+   string Q2name = TARGET_TYPE +"_"+to_string(runToAnalyze)+"_Q2"; string Q2title = "Plot of e^{-} Q^{2}; Q^{2} (GeV^{2});;";
+   string RASTERname = TARGET_TYPE +"_"+to_string(runToAnalyze)+"_RASTER"; string RASTERtitle = "Plot of Beam Raster Position; V_{X} (cm); V_{Y} (cm);";
+   TH1D* ElecVX = new TH1D(VXname.c_str(), VXtitle.c_str(),60,-3,3);
+   TH1D* ElecVY = new TH1D(VYname.c_str(), VYtitle.c_str(),60,-3,3);
+   TH1D* ElecVZ = new TH1D(VZname.c_str(), VZtitle.c_str(),400,-20,20);
+   TH1D* ElecW  = new TH1D(Wname.c_str(),  Wtitle.c_str(), 500, 0,5);
+   TH1D* ElecQ2 = new TH1D(Q2name.c_str(), Q2title.c_str(),1000,0,10);
+   TH2D* ElecRASTER = new TH2D(RASTERname.c_str(), RASTERtitle.c_str(),90,-1.5,1.5,90,-1.5,1.5);
+   // Create the ROOT file for storing the diagnostic plots
+   string tfile_path = thisDir+"/ROOT_Files/"+TARGET_TYPE+"_"+to_string(runToAnalyze)+"_Diagnostic_Plots.root";
+   TFile* file = new TFile(tfile_path.c_str(), "RECREATE");
+
    // Read in the information for the runs
    //RunPeriod Su22; Su22.SetRunPeriod("Su22");
    RunPeriod Period; Period.SetRunPeriod();
@@ -106,6 +125,7 @@ void Get_DF_By_Sector(){
     hipo::bank HEL_SCALER(factory.getSchema("HEL::scaler"));
     hipo::bank RUN_SCALER(factory.getSchema("RUN::scaler"));
     hipo::bank CONF(factory.getSchema("RUN::config"));
+    hipo::bank RASTER(factory.getSchema("RASTER::position"));
 
     while(reader.next()==true){ // #1
 	reader.read(event);
@@ -115,6 +135,7 @@ void Get_DF_By_Sector(){
 	event.getStructure(CONF);
         event.getStructure(HEL_SCALER);
         event.getStructure(RUN_SCALER);
+	event.getStructure(RASTER);
 	int evnum = CONF.getInt("event",0);
 	int runnum= CONF.getInt("run",0); // Already read in, but this is a double-check
 
@@ -157,11 +178,10 @@ void Get_DF_By_Sector(){
 	   // The following applies kinematic cuts that Gregory used in his analysis:
 	   // E >= 2.6 GeV, 5 deg < theta < 35 deg for scattered e-, abs(Vz+4.5) > 4, W >= 2.0
 	   if( E >= 2.6 && theta > 5.0 && theta < 35.0 && w > 2.0 && Q2 > 1.0 ){
-		qa->AccumulateCharge();
+		qa->AccumulateCharge(); // Accumulate FC charge from QADB
+		double vx = PART.getDouble("vx",0); double vy = PART.getDouble("vy",0);  // electron x,y vertices
+		double rx = RASTER.getDouble("x",0);double ry = RASTER.getDouble("y",0); // beam raster positions
 		// Figure out which bin to put the count in
-		// IMPORTANT NOTE: while I may be assigning counts to n+ and n- bins, DON'T USE THESE VALUES
-		// TO CALCULATE ASYMMETRIES!!!! I don't correctly account for target polarization for polarized
-		// targets so the actual signs don't matter; I'm just interested in the counts for this program.
 		AllData.SlotCountsIntoBin( Q2, x, hel );
 		if( trk_sector == 1 ) SectorData[trk_sector-1].SlotCountsIntoBin( Q2, x, hel );
 		else if( trk_sector == 2 ) SectorData[trk_sector-1].SlotCountsIntoBin( Q2, x, hel );
@@ -169,6 +189,9 @@ void Get_DF_By_Sector(){
 		else if( trk_sector == 4 ) SectorData[trk_sector-1].SlotCountsIntoBin( Q2, x, hel );
 		else if( trk_sector == 5 ) SectorData[trk_sector-1].SlotCountsIntoBin( Q2, x, hel );
 		else if( trk_sector == 6 ) SectorData[trk_sector-1].SlotCountsIntoBin( Q2, x, hel );
+		// Now slot into the the histograms
+		ElecVX->Fill(vx); ElecVY->Fill(vy); ElecVZ->Fill(vz);
+		ElecW->Fill(w); ElecQ2->Fill(Q2); ElecRASTER->Fill(rx,ry);
 	   } // end of "if" checking the kinematic cuts
 	} // end #2
 	event_counter++;
@@ -180,13 +203,17 @@ void Get_DF_By_Sector(){
    cout << "Now starting to write to the output files.\n";
 
    // Write FC charge to all bins
-   double fullFC = (qa->GetAccumulatedCharge()) / 2.0;
-   //AllData.SlotChargeIntoBin( FCup_hel_n, FCup_hel_p );
-   //for(size_t i=0; i<SectorData.size(); i++) SectorData[i].SlotChargeIntoBin( FCup_hel_n, FCup_hel_p );
-   AllData.SlotChargeIntoBin( fullFC, fullFC );
-   for(size_t i=0; i<SectorData.size(); i++) SectorData[i].SlotChargeIntoBin( fullFC, fullFC );
+   //double fullFC = (qa->GetAccumulatedCharge()) / 2.0;
+   AllData.SlotChargeIntoBin( FCup_hel_n, FCup_hel_p );
+   for(size_t i=0; i<SectorData.size(); i++) SectorData[i].SlotChargeIntoBin( FCup_hel_n, FCup_hel_p );
+   //AllData.SlotChargeIntoBin( fullFC, fullFC );
+   //for(size_t i=0; i<SectorData.size(); i++) SectorData[i].SlotChargeIntoBin( fullFC, fullFC );
    // Write the data
    WriteSectorData( AllData, SectorData, TARGET_TYPE, runToAnalyze, thisDir );
 
+   // Write histograms to Tfile
+   ElecVX->Write(); ElecVY->Write(); ElecVZ->Write();
+   ElecW->Write(); ElecQ2->Write(); ElecRASTER->Write();
+   file->Close();
 
 }
