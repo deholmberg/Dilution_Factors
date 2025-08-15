@@ -55,19 +55,24 @@ void Dilution_Factor_Analysis(){
 	}
     }
 
-    // We'll just plot the first epoch right now.
-    for(size_t i=0; i<Epoch2.size(); i++){
-	int j = Epoch2[i];
+    // We'll just plot the third epoch right now.
+    for(size_t i=0; i<Epoch3.size(); i++){
+	int j = Epoch3[i];
         stringstream s1; s1 << "Text_Files/NH3_"<< j <<"_DF_Data.txt";
-        Epochs[0].AddToBins( s1.str(), "NH3" );
+        Epochs[2].AddToBins( s1.str(), "NH3" );
     }
 
+/*
     // Plot the DF for Epoch2
     auto DF_NH3_E2 = DF_Legend_Plot( Epochs[0], "All Sectors", "NH3", "YES");
     DF_NH3_E2->Draw();
     // Plot the PF for Epoch2
     auto PF_NH3_E2 = PF_Legend_Plot( Epochs[0], "All Sectors", "NH3");
     PF_NH3_E2->Draw();
+*/
+    //Plot the raw double-spin asymmetries for the NH3 runs in the epoch
+    auto AllRaw_E2 = AllRawNH3_Legend_Plot( Epochs[2], "All Sectors");
+    AllRaw_E2->Draw();
 
     // You can also save everything to a .txt or .csv file. 
     // They used to work but I broke something, so hold off on this for now...

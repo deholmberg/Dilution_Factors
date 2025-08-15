@@ -4,7 +4,7 @@
 # more easily submit my code to the farm to be analyzed. All credit in the slurm directory goes to him!!
 
 VERSION="pass1"
-PERIOD="summer22"
+PERIOD="spring23"
 #THISDIR= pwd | tr -d '\n'
 THISDIR=`pwd`
 
@@ -19,13 +19,12 @@ TARGET_TYPES=(
 )
 # Define sidisdvcs as an array of directory paths
 sidisdvcs=(
-    "/cache/clas12/rg-c/production/$PERIOD/$VERSION/10.5gev/${TARGET_TYPES[0]}/dst/train/sidisdvcs/*"
-    "/cache/clas12/rg-c/production/$PERIOD/$VERSION/10.5gev/${TARGET_TYPES[1]}/dst/train/sidisdvcs/*"
-    "/cache/clas12/rg-c/production/$PERIOD/$VERSION/10.5gev/${TARGET_TYPES[2]}/dst/train/sidisdvcs/*"
-    "/cache/clas12/rg-c/production/$PERIOD/$VERSION/10.5gev/${TARGET_TYPES[3]}/dst/train/sidisdvcs/*"
-    "/cache/clas12/rg-c/production/$PERIOD/$VERSION/10.5gev/${TARGET_TYPES[4]}/dst/train/sidisdvcs/*"
-    "/cache/clas12/rg-c/production/$PERIOD/$VERSION/10.5gev/${TARGET_TYPES[5]}/dst/train/sidisdvcs/*"
-    #"/cache/clas12/rg-c/production/spring23/pass1/${TARGET_TYPES[5]}/dst/train/sidisdvcs/*"
+    "/cache/clas12/rg-c/production/$PERIOD/$VERSION/${TARGET_TYPES[0]}/dst/train/sidisdvcs/*"
+    "/cache/clas12/rg-c/production/$PERIOD/$VERSION/${TARGET_TYPES[1]}/dst/train/sidisdvcs/*"
+    "/cache/clas12/rg-c/production/$PERIOD/$VERSION/${TARGET_TYPES[2]}/dst/train/sidisdvcs/*"
+    "/cache/clas12/rg-c/production/$PERIOD/$VERSION/${TARGET_TYPES[3]}/dst/train/sidisdvcs/*"
+    "/cache/clas12/rg-c/production/$PERIOD/$VERSION/${TARGET_TYPES[4]}/dst/train/sidisdvcs/*"
+    "/cache/clas12/rg-c/production/$PERIOD/$VERSION/${TARGET_TYPES[5]}/dst/train/sidisdvcs/*"
 )
 
 # Directorty for the output files
